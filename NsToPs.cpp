@@ -5,13 +5,13 @@
 #include "math.h"
 #include "time.h"
 #define CN 50
-int c = 5;
-int low[CN];
+int c = 5;   //选项个数 
+int low[CN]; //low和up数组不包含在初赛使用范围内 
 int up[CN];
-int t[CN];  //正调查人数分布 
+int t[CN];  //正调查选人数分布 
 int _t[CN];
 int r[CN];  //负调查人数分布 
-double t_hat[CN];
+double t_hat[CN];  //以下三个t[]是作为算法准确率的评判标准的，不需要加入在我们的算法 
 int t_pie[CN];
 double t_pie2[CN];
 int rand_seed;
@@ -22,14 +22,14 @@ void init()
 	c =  5;    //选项数为5 
 	n = 500;   //参与者为500 
 }
-void caseA()
+void caseA()  //测试数据A 
 {
 	t[0]=10; t[1]=25; t[2]=60; t[3]=150; t[4]=200;
 	low[0]=0; low[1]=0;   low[2]=50;   low[3]=100; low[4]=250;
 	up[0]=100; up[1]=200;  up[2]=300;   up[3]=400; up[4]=500;
 }
 
-void caseB()
+void caseB() //测试数据B 
 {
 	low[0]=0; low[1]=0;   low[2]=0;   low[3]=100; low[4]=250;
 	up[0]=50; up[1]=100;  up[2]=500;   up[3]=500; up[4]=500;
@@ -63,14 +63,14 @@ void caseU()//uniform distribution 均匀分布
 	up[0]=100; up[1]=500;  up[2]=500;   up[3]=500; up[4]=500;
 }
 
-void caseN()//normal distribution 正态分布 
+void caseN()//normal distribution 正态分布
 {
 	t[0]=10; t[1]=102; t[2]=290; t[3]=96; t[4]=2;// 10   102   290    96     2
 	low[0]=0; low[1]=0;   low[2]=250;   low[3]=0; low[4]=0;
 	up[0]=20; up[1]=500;  up[2]=500;   up[3]=500; up[4]=10;
 }
 
-void caseE()//exp distribution 根据背景经验的分布 
+void caseE()//exp distribution 根据背景经验的分布
 {
 	t[0]=317; t[1]=130; t[2]=38; t[3]=10; t[4]=5;// 317   130    38    10     5
 	low[0]=250; low[1]=0;   low[2]=0;   low[3]=0; low[4]=0;
@@ -85,7 +85,7 @@ void caseLN()//log-normal distribution 对数正态分布
 	up[0]=10; up[1]=500;  up[2]=500;   up[3]=50; up[4]=10;
 }
 
-void showInfo()
+void showInfo() //打印正调查矩阵
 {
 	printf("\n---------------------------->  Positive Survey:  <------------------------\n");
 	for(int i=0;i<c;i++) printf("%d ",t[i]);
@@ -94,7 +94,7 @@ void showInfo()
 	printf("\n");
 }
 
-void generatePS()
+void generatePS() //生成正调查人数分布 
 {
 //	caseA();
 //	caseB();
@@ -102,7 +102,7 @@ void generatePS()
 }
 
 
-void generateNS()      //生成负调查人数分布 
+void generateNS()  //生成负调查人数分布 
 {
 	int i;
 	for(i=0;i<c;i++) r[i]=0;
@@ -127,7 +127,7 @@ void generateNS()      //生成负调查人数分布
 	printf("\n");
 }
 
-void NStoPS(int t[])  //第一种转换方法 参数为空的正调查数组 r[]全局变量 负调查分布 以下三个问题参数意义相同 
+void NStoPS(int t[])  //第一种negative survey向正调查转换，太过简单，不考虑 
 {
 	for(int i=0;i<c;i++)
 	{
@@ -141,7 +141,17 @@ void NStoPS(int t[])  //第一种转换方法 参数为空的正调查数组 r[]全局变量 负调查分
 	}
 	printf("\n");
 }
-
+/*
+第二种转换方法，本cpp文件中的形参为空数组t[]，用来存储负数据(全局变量r[])转化后的正数据。
+ for(int i=0;i<c;i++)
+	{
+		t[i]=n-(c-1)*r[i];
+		flag[i]=true;
+	}
+这段代码用于将负数据初步转化为正数据
+接下来的循环为去除数据中的错误不可用数据。
+在正式的编写中，传入参数只要有负调查的人数分布，在函数内部转化为正调查的数组，并且经过错误数据的去除与数据的填写即可 
+*/ 
 void NStoPSII(double t[])    //第二种转换方法 
 {
 	bool flag[CN];
@@ -152,7 +162,7 @@ void NStoPSII(double t[])    //第二种转换方法
 	}
 	int tN=n;
 	int tc=c;
-	while(true)
+	while(true)      //对于小于0的分布进行置0处理 
 	{	int i;
 		for(i=0;i<c;i++)
 		{
@@ -180,7 +190,7 @@ void NStoPSII(double t[])    //第二种转换方法
 	}
 	int p = 0;
 	int tn = n;
-	for(int i=0;i<c;i++)
+	for(int i=0;i<c;i++)    //对数据进行误差处理 
 	{
 		_t[i] = int(t[i]+0.5);
 		if(flag[i])
@@ -199,7 +209,7 @@ void NStoPSII(double t[])    //第二种转换方法
 	printf("\n");
 }
 
-void NStoPS_BK(double t[])  //结合了背景考虑的负调查向正调查转换方法 
+void NStoPS_BK(double t[])  //结合了背景考虑的负调查向正调查转换方法，本次实验不考虑 
 {
 	bool flag[CN];
 	for(int i=0;i<c;i++)
@@ -280,10 +290,10 @@ void iter_U()
 	{
 	//	showInfo();
 		generateNS();
-		NStoPS(t_pie);
+		NStoPS(t_pie);     
 		NStoPSII(t_pie2);
 		NStoPS_BK(t_hat);
-		double temp_acc = 0;
+		double temp_acc = 0;    //此类acc变量不需要出现在初赛中，此为误差评判变量 
 		double temp_acc1 = 0;
 		double temp_acc2 = 0;
 		for(j = 0;j<c;j++)
@@ -323,7 +333,7 @@ void iter_N()
 		NStoPS(t_pie);
 		NStoPSII(t_pie2);
 		NStoPS_BK(t_hat);
-		double temp_acc = 0;
+		double temp_acc = 0; //此类acc变量不需要出现在初赛中，此为误差评判变量 
 		double temp_acc1 = 0;
 		double temp_acc2 = 0;
 		for(j = 0;j<c;j++)
@@ -363,7 +373,7 @@ void iter_E()
 		NStoPS(t_pie);
 		NStoPSII(t_pie2);
 		NStoPS_BK(t_hat);
-		double temp_acc = 0;
+		double temp_acc = 0;   //此类acc变量不需要出现在初赛中，此为误差评判变量 
 		double temp_acc1 = 0;
 		double temp_acc2 = 0;
 		for(j = 0;j<c;j++)
@@ -403,7 +413,7 @@ void iter_logN()
 		NStoPS(t_pie);
 		NStoPSII(t_pie2);
 		NStoPS_BK(t_hat);
-		double temp_acc = 0;
+		double temp_acc = 0;  //此类acc变量不需要出现在初赛中，此为误差评判变量 
 		double temp_acc1 = 0;
 		double temp_acc2 = 0;
 		for(j = 0;j<c;j++)
